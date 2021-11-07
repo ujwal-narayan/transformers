@@ -355,9 +355,8 @@ class DataCollatorForLanguageModeling:
         masked_indices = torch.bernoulli(probability_matrix).bool()
         for i in range(len(masked_indices)):
             if ~masked_indices[i]:
-                print(mapping[i])
                 labels[mapping[i][0]][karak_labels[mapping[i][0]][mapping[i][1]-1]] = -100
-        return labels
+        return labels,masked_indices
 
     def __post_init__(self):
         if self.mlm and self.tokenizer.mask_token is None:
@@ -396,7 +395,7 @@ class DataCollatorForLanguageModeling:
         """
         labels = inputs.clone()
         # We sample a few tokens in each sequence for MLM training (with probability `self.mlm_probability`)
-        labels = self.getKarakLabels(labels,special_tokens_mask)
+        labels,masked_indices = self.getKarakLabels(labels,special_tokens_mask)
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
         indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
