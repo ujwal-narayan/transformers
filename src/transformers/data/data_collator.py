@@ -331,7 +331,7 @@ class DataCollatorForLanguageModeling:
     pad_to_multiple_of: Optional[int] = None
 
     def getKarakLabels(labels,special_tokens_mask):
-        karak_markers_tokenized = [4384, 37, 13734, 236, 2092, 5650, 1301, 4761, 1883, 4285]
+        karak_markers_tokenized = [1154, 1124, 1125, 1126, 43461, 13000, 1253, 40359, 1198, 8719, 1169, 1110, 88794, 1114, 1117]
         karak_labels = []
         c = 0
         mapping = []
