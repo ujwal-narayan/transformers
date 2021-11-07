@@ -353,10 +353,15 @@ class DataCollatorForLanguageModeling:
             special_tokens_mask = special_tokens_mask.bool()
         probability_matrix.masked_fill_(special_tokens_mask, value=0.0)
         masked_indices = torch.bernoulli(probability_matrix).bool()
+        masked_indices_new = labels.clone()
+        masked_indices_new = torch.full(labels.shape,False)
         for i in range(len(masked_indices)):
             if ~masked_indices[i]:
                 labels[mapping[i][0]][karak_labels[mapping[i][0]][mapping[i][1]-1]] = -100
-        return labels,masked_indices
+                masked_indices_new[mapping[i][0]][karak_labels[mapping[i][0]][mapping[i][1]-1]] = True        
+        
+
+        return labels,masked_indices_new
 
     def __post_init__(self):
         if self.mlm and self.tokenizer.mask_token is None:
