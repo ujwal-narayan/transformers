@@ -343,15 +343,14 @@ class DataCollatorForLanguageModeling:
                     c +=1
                     mapping.append([sent_num,len(probs)])
             karak_labels.append(probs)
-        probability_matrix = torch.full(labels.shape, 0.8)
+        probability_matrix = torch.full((c,1), 0.8)
         if special_tokens_mask is None:
             special_tokens_mask = [
-                self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
+                self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in probability_matrix.tolist()
             ]
             special_tokens_mask = torch.tensor(special_tokens_mask, dtype=torch.bool)
         else:
             special_tokens_mask = special_tokens_mask.bool()
-        probability_matrix = torch.full((c,1), 0.8)
         probability_matrix.masked_fill_(special_tokens_mask, value=0.0)
         masked_indices = torch.bernoulli(probability_matrix).bool()
         for i in range(len(masked_indices)):
