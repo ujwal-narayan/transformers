@@ -330,7 +330,7 @@ class DataCollatorForLanguageModeling:
     mlm_probability: float = 0.15
     pad_to_multiple_of: Optional[int] = None
 
-    def getKarakLabels(labels,special_tokens_mask):
+    def getKarakLabels(self,labels,special_tokens_mask):
         karak_markers_tokenized = [1154, 1124, 1125, 1126, 43461, 13000, 1253, 40359, 1198, 8719, 1169, 1110, 88794, 1114, 1117]
         karak_labels = []
         c = 0
