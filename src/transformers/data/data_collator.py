@@ -351,7 +351,7 @@ class DataCollatorForLanguageModeling:
             special_tokens_mask = torch.tensor(special_tokens_mask, dtype=torch.bool)
         else:
             special_tokens_mask = special_tokens_mask.bool()
-        probability_matrix = torch.full((c,1), mlm_prob)
+        probability_matrix = torch.full((c,1), 0.8)
         probability_matrix.masked_fill_(special_tokens_mask, value=0.0)
         masked_indices = torch.bernoulli(probability_matrix).bool()
         for i in range(len(masked_indices)):
