@@ -330,6 +330,36 @@ class DataCollatorForLanguageModeling:
     mlm_probability: float = 0.15
     pad_to_multiple_of: Optional[int] = None
 
+    def getKarakLabels(labels,special_tokens_mask):
+        karak_markers_tokenized = [4384, 37, 13734, 236, 2092, 5650, 1301, 4761, 1883, 4285]
+        karak_labels = []
+        c = 0
+        mapping = []
+        for sent_num,sent in enumerate(labels):
+            probs = []
+            for i,k in enumerate(sent):
+                if k in karak_markers_tokenized:
+                    probs.append(i)
+                    c +=1
+                    mapping.append([sent_num,len(probs)])
+            karak_labels.append(probs)
+         probability_matrix = torch.full(labels.shape, 0.8)
+        if special_tokens_mask is None:
+            special_tokens_mask = [
+                self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
+            ]
+            special_tokens_mask = torch.tensor(special_tokens_mask, dtype=torch.bool)
+        else:
+            special_tokens_mask = special_tokens_mask.bool()
+        probability_matrix = torch.full((c,1), mlm_prob)
+        probability_matrix.masked_fill_(special_tokens_mask, value=0.0)
+        masked_indices = torch.bernoulli(probability_matrix).bool()
+        for i in range(len(masked_indices)):
+            if ~masked_indices[i]:
+                print(mapping[i])
+                labels[mapping[i][0]][karak_labels[mapping[i][0]][mapping[i][1]-1]] = -100
+        return labels
+
     def __post_init__(self):
         if self.mlm and self.tokenizer.mask_token is None:
             raise ValueError(
@@ -367,18 +397,7 @@ class DataCollatorForLanguageModeling:
         """
         labels = inputs.clone()
         # We sample a few tokens in each sequence for MLM training (with probability `self.mlm_probability`)
-        probability_matrix = torch.full(labels.shape, self.mlm_probability)
-        if special_tokens_mask is None:
-            special_tokens_mask = [
-                self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
-            ]
-            special_tokens_mask = torch.tensor(special_tokens_mask, dtype=torch.bool)
-        else:
-            special_tokens_mask = special_tokens_mask.bool()
-
-        probability_matrix.masked_fill_(special_tokens_mask, value=0.0)
-        masked_indices = torch.bernoulli(probability_matrix).bool()
-        labels[~masked_indices] = -100  # We only compute loss on masked tokens
+        labels = self.getKarakLabels(labels,special_tokens_mask)
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
         indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
